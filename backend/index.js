@@ -1,15 +1,13 @@
-// index.js
 const express = require('express');
-const app = express();
+const cors = require('cors');
 const productRoutes = require('./routes/productRoutes');
 
-app.use(express.json());
+const app = express();
 
-// Use routes
+app.use(cors()); // ✅ This allows frontend to connect
+app.use(express.json());
 app.use('/api/products', productRoutes);
 
-// Start server
-const PORT = 3000;
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+app.listen(3000, () => {
+  console.log('Server running on http://localhost:3000');
 });
