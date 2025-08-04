@@ -1,0 +1,14 @@
+.scan-container {
+  text-align: center;
+  padding: 2rem;
+  min-height: 80vh;
+  background-color: #f9f9f9;
+  color:green;
+}
+
+#qr-reader {
+  margin-top: 20px;
+  display: inline-block;
+  width: auto;
+  color:green;
+}
