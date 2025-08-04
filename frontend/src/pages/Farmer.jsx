@@ -1,10 +1,13 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import './Farmer.css';
+import { QRCodeCanvas } from 'qrcode.react';
 
 function Farmer() {
   const [name, setName] = useState('');
   const [basePrice, setBasePrice] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  const [productId, setProductId] = useState(null);
+  const qrRef = useRef();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,11 +22,23 @@ function Farmer() {
 
     if (response.ok) {
       setSuccessMsg(`✅ ${data.message}`);
+      setProductId(data.data.id);
       setName('');
       setBasePrice('');
     } else {
       setSuccessMsg('❌ Failed to add crop.');
     }
+  };
+
+  const handleDownloadQR = () => {
+    const canvas = qrRef.current.querySelector('canvas');
+    const pngUrl = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.href = pngUrl;
+    link.download = `crop-${productId}-qr.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -51,6 +66,20 @@ function Farmer() {
 
         {successMsg && <p className="success-message">{successMsg}</p>}
       </form>
+
+      {productId && (
+        <div className="qr-section" ref={qrRef}>
+          <p>📦 Crop QR Code (for scanning later):</p>
+          <QRCodeCanvas
+            value={`http://localhost:5173/product/${productId}`}
+            size={180}
+          />
+          <br />
+          <button onClick={handleDownloadQR} style={{ marginTop: '10px' }}>
+            ⬇️ Download QR Code
+          </button>
+        </div>
+      )}
     </div>
   );
 }
