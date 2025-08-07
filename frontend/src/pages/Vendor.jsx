@@ -8,19 +8,33 @@ function Vendor() {
   const [successMsg, setSuccessMsg] = useState('');
 
   useEffect(() => {
-    // Fetch all products
-    fetch('http://localhost:3000/api/products')
-      .then(res => res.json())
-      .then(data => setProducts(data));
+    // Fetch all product IDs one-by-one and build dropdown list
+    const fetchProducts = async () => {
+      const result = [];
+      for (let id = 1; id <= 20; id++) {
+        try {
+          const res = await fetch(`http://localhost:3000/api/products/product/${id}`);
+          if (!res.ok) continue;
+
+          const data = await res.json();
+          result.push({ id, name: data.name, basePrice: data.basePrice });
+        } catch  {
+          continue;
+        }
+      }
+      setProducts(result);
+    };
+
+    fetchProducts();
   }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const response = await fetch(`http://localhost:3000/api/products/${selectedId}/addPrice`, {
+    const response = await fetch(`http://localhost:3000/api/products/vendor/update-price`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ vendorPrice }),
+      body: JSON.stringify({ productId: selectedId, newPrice: vendorPrice }),
     });
 
     const data = await response.json();

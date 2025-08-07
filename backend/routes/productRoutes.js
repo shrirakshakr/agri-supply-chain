@@ -1,71 +1,78 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
+const contract = require("../blockchain"); // ✅ Blockchain contract
 
-// Temporary in-memory product list
-let products = [];
+// 🧑‍🌾 Add Product (Farmer)
+// productRoutes.js
 
-// ✅ 1. Add Product (Farmer)
-router.post('/add', (req, res) => {
+// 🧑‍🌾 Add Product (Farmer)
+// 🧑‍🌾 Add Product (Farmer)
+router.post("/farmer/add-product", async (req, res) => {
     const { name, basePrice } = req.body;
 
-    const newProduct = {
-        id: products.length + 1,
-        name,
-        basePrice,
-        vendorPrices: [],
-        createdAt: new Date()
-    };
+    try {
+        const tx = await contract.addProduct(name, basePrice);
+        await tx.wait();
 
-    products.push(newProduct);
+        // 🔁 Get current productCount (latest ID)
+        const productCount = await contract.productCount();
 
-    res.status(201).json({
-        message: 'Product added successfully',
-        data: newProduct
-    });
+        res.status(200).json({
+            message: "✅ Product added to blockchain.",
+            productId: productCount.toString(),
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
-// ✅ 2. Get All Products (for Vendor dropdown)
-router.get('/', (req, res) => {
-    res.json(products);
+
+
+
+// 🧑‍💼 Update Price (Vendor)
+// 🧑‍💼 Update Price (Vendor)
+router.post("/vendor/update-price", async (req, res) => {
+    const { productId, newPrice } = req.body;
+
+    try {
+        const tx = await contract.updatePrice(productId, newPrice);
+        const receipt = await tx.wait();
+
+        res.status(200).json({
+            message: "✅ Price updated on blockchain.",
+            txHash: receipt.hash
+        });
+    } catch (error) {
+        console.error("❌ Error updating price:", error);
+        res.status(500).json({ error: error.message });
+    }
 });
 
-// ✅ 3. Add Vendor Price to Product
-router.post('/:id/addPrice', (req, res) => {
+
+
+// 📦 Get Product by ID (for history or display)
+router.get("/product/:id", async (req, res) => {
     const { id } = req.params;
-    const { vendorPrice } = req.body;
 
-    const product = products.find(p => p.id === parseInt(id));
-    if (!product) {
-        return res.status(404).json({ message: 'Product not found' });
+    try {
+        const product = await contract.getProduct(id);
+
+        const formatted = {
+            name: product[0],
+            basePrice: product[1].toString(),
+            farmer: product[2],
+            priceTrail: product[3].map(p => p.toString()),
+            handlers: product[4]
+        };
+
+        res.status(200).json(formatted);
+    } catch (error) {
+        console.error("❌ Error fetching product:", error);
+        res.status(500).json({ error: error.message });
     }
-
-    // Ensure vendorPrices array exists
-    if (!Array.isArray(product.vendorPrices)) {
-        product.vendorPrices = [];
-    }
-
-    // Add vendor price with timestamp
-    product.vendorPrices.push({
-        price: vendorPrice,
-        updatedAt: new Date()
-    });
-
-    res.json({
-        message: 'Vendor price updated successfully',
-        product
-    });
 });
 
-// ✅ 4. Get Product by ID (for Price History Viewer)
-router.get('/:id', (req, res) => {
-    const { id } = req.params;
-    const product = products.find(p => p.id === parseInt(id));
 
-    if (!product) {
-        return res.status(404).json({ message: 'Product not found' });
-    }
 
-    res.json(product);
-});
 
 module.exports = router;

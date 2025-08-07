@@ -13,20 +13,24 @@ function ScanQR() {
     scanner.render(
       (decodedText) => {
         console.log('✅ QR Code Scanned:', decodedText);
-        window.location.href = decodedText; // Navigate to product details
+
+        // Validate URL format: must match /product/:id
+        const match = decodedText.match(/\/product\/(\d+)$/);
+        if (match) {
+          const productId = match[1];
+          window.location.href = `/product/${productId}`;
+        } else {
+          alert("❌ Invalid QR code format.");
+        }
       },
-      () => {
-        // console.warn('QR Scan Error:', error);
+      (error) => {
+        console.warn('QR Scan Error:', error);
       }
     );
 
     return () => {
-      // Cleanup: remove scanner div content to avoid duplication
       const qrElement = document.getElementById('qr-reader');
-if (qrElement) {
-  qrElement.innerHTML = '';
-}
-
+      if (qrElement) qrElement.innerHTML = '';
     };
   }, []);
 
