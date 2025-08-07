@@ -1,33 +1,39 @@
-import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import './ProductDetail.css';
 
 function ProductDetail() {
   const { id } = useParams();
   const [product, setProduct] = useState(null);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    fetch(`http://localhost:3000/api/products/${id}`)
+    fetch(`http://localhost:3000/api/products/product/${id}`)
       .then(res => res.json())
-      .then(data => setProduct(data))
-      .catch(err => console.error("Error:", err));
+      .then(data => {
+        if (data.error) setError(data.error);
+        else setProduct(data);
+      });
   }, [id]);
 
-  if (!product) return <p>Loading product...</p>;
+  if (error) return <p className="error">{error}</p>;
+  if (!product) return <p>Loading...</p>;
 
   return (
-    <div className="detail-container">
-      <h2>🌾 Crop: {product.name}</h2>
+    <div className="product-detail">
+      <h2>Product ID: {id}</h2>
+      <p><strong>Crop Name:</strong> {product.name}</p>
       <p><strong>Base Price:</strong> ₹{product.basePrice}</p>
+      <p><strong>Farmer:</strong> {product.farmer}</p>
 
-      <h3>📈 Vendor Price History:</h3>
+      <h3>📈 Vendor Price Trail</h3>
       <ul>
-        {product.vendorPrices.length === 0 ? (
+        {product.priceTrail.length === 0 ? (
           <li>No vendor prices yet.</li>
         ) : (
-          product.vendorPrices.map((vp, index) => (
+          product.priceTrail.map((price, index) => (
             <li key={index}>
-              ₹{vp.price} — {new Date(vp.updatedAt).toLocaleString()}
+              ₹{price} by {product.handlers[index]}
             </li>
           ))
         )}

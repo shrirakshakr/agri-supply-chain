@@ -12,21 +12,26 @@ function Farmer() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const response = await fetch('http://localhost:3000/api/products/add', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, basePrice }),
-    });
+    try {
+      const response = await fetch('http://localhost:3000/api/products/farmer/add-product', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, basePrice }),
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (response.ok) {
-      setSuccessMsg(`✅ ${data.message}`);
-      setProductId(data.data.id);
-      setName('');
-      setBasePrice('');
-    } else {
-      setSuccessMsg('❌ Failed to add crop.');
+      if (response.ok) {
+        setSuccessMsg(`✅ ${data.message}`);
+        setProductId(data.productId); // <-- coming from blockchain route
+        setName('');
+        setBasePrice('');
+      } else {
+        setSuccessMsg(`❌ ${data.error || 'Failed to add product.'}`);
+      }
+    } catch (error) {
+      console.error(error);
+      setSuccessMsg('❌ Server error. Please try again.');
     }
   };
 
