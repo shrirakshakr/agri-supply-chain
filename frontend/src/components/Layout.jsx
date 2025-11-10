@@ -1,7 +1,13 @@
-import { Outlet, Link } from 'react-router-dom';
+import { Outlet, Link, useNavigate } from 'react-router-dom';
 import './Layout.css';
 
 function Layout() {
+  const navigate = useNavigate();
+  function handleLogout() {
+    localStorage.removeItem('agri_user');
+    navigate('/login');
+  }
+
   return (
     <>
       <header>
@@ -11,6 +17,7 @@ function Layout() {
           <Link to="/farmer">Farmer</Link>
           <Link to="/vendor">Vendor</Link>
           <Link to="/scan">QR Scan</Link>
+          <button onClick={handleLogout} style={{ marginLeft: '1rem' }}>Logout</button>
         </nav>
       </header>
 

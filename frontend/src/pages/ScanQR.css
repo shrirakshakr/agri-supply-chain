@@ -3,12 +3,12 @@
   padding: 2rem;
   min-height: 80vh;
   background-color: #f9f9f9;
-  color:green;
+  color:#1f2937;
 }
 
 #qr-reader {
   margin-top: 20px;
   display: inline-block;
   width: auto;
-  color:green;
+  color:#1f2937;
 }
