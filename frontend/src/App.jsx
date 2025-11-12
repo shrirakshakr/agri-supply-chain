@@ -8,6 +8,7 @@ import ProductDetail from './pages/ProductDetail';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import AdminPage from './pages/AdminPage';
+import Products from './pages/Products';
 
 function getStoredUser() {
 	try {
@@ -49,6 +50,7 @@ function App() {
           <Route index element={<Home />} />
           <Route path="/farmer" element={<Farmer />} />
           <Route path="/vendor" element={<Vendor />} />
+          <Route path="/products" element={<Products />} />
           <Route path="scan" element={<ScanQR />} />
           <Route path="/product/:id" element={<ProductDetail />} />
         </Route>

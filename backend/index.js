@@ -5,6 +5,7 @@ require('dotenv').config();
 
 const productRoutes = require('./routes/productRoutes');
 const authRoutes = require('./routes/authRoutes');
+const priceRoutes = require('./routes/priceRoutes');
 
 const app = express();
 
@@ -12,6 +13,7 @@ app.use(cors()); // ✅ This allows frontend to connect
 app.use(express.json());
 app.use('/api/products', productRoutes);
 app.use('/api', authRoutes);
+app.use('/api', priceRoutes);
 
 const PORT = process.env.PORT || 3000;
 

@@ -14,11 +14,11 @@ function ScanQR() {
       (decodedText) => {
         console.log('✅ QR Code Scanned:', decodedText);
 
-        // Validate URL format: must match /product/:id
-        const match = decodedText.match(/\/product\/(\d+)$/);
+        // Validate URL format: must match /product/:id (accept numeric or ObjectId-like strings)
+        const match = decodedText.match(/\/product\/([A-Za-z0-9]+)$/);
         if (match) {
-          const productId = match[1];
-          window.location.href = `/product/${productId}`;
+          const id = match[1];
+          window.location.href = `/product/${id}`;
         } else {
           alert("❌ Invalid QR code format.");
         }

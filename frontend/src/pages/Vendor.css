@@ -40,6 +40,11 @@
   border-radius: 6px;
 }
 
+.vendor-form .error {
+  color: #c62828;
+  margin-top: 12px;
+}
+
 .vendor-form button {
   margin-top: 20px;
   width: 100%;
