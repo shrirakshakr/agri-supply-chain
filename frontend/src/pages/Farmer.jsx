@@ -117,7 +117,6 @@ function Farmer() {
       setProductId(data.productId);
       setCropCommodity('');
       setBasePrice('');
-      setCommodity('');
       setStateName('');
       setDistrict('');
       setMarket('');
