@@ -1,23 +1,21 @@
 const mongoose = require('mongoose');
 
+// MongoDB only stores QR code mapping to blockchain transaction
 const ProductSchema = new mongoose.Schema(
 	{
-		commodity: { type: String, required: true },
-		state: { type: String, required: true },
-		district: { type: String, required: true },
-		market: { type: String, required: true },
-		vendorPrice: { type: Number, required: true },
-		marketModalPrice: { type: Number, required: true },
-		status: { type: String, enum: ['accept', 'reject'], required: true },
-		reason: { type: String, required: true },
-
-		// Who submitted/updated
-		submitterName: { type: String, default: '' },
-		submitterRole: { type: String, enum: ['Farmer', 'Vendor', 'Admin', ''], default: '' },
-		submitterId: { type: String, default: '' }, // uniqueId or user._id
-
-		// Optional link to blockchain product id (numeric string)
-		blockchainProductId: { type: String, default: '' }
+		// Blockchain product ID (from smart contract)
+		blockchainProductId: { type: String, required: true, unique: true, index: true },
+		
+		// Transaction hash from blockchain
+		txHash: { type: String, required: true },
+		
+		// QR code URL (for consumer scanning)
+		qrCodeUrl: { type: String, required: true },
+		
+		// Optional metadata for ML verification (not used for display)
+		mlVerificationStatus: { type: String, enum: ['accept', 'reject'], default: '' },
+		mlReason: { type: String, default: '' },
+		marketModalPrice: { type: Number, default: 0 }
 	},
 	{ timestamps: true }
 );

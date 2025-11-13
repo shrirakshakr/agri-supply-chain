@@ -1,178 +1,159 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { API_BASE } from '../api';
 import { QRCodeCanvas } from 'qrcode.react';
-
-const AG_API = 'https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070';
-const AG_KEY = '579b464db66ec23bdd000001c3a5347951df4af851d6db109e149101';
+import './Products.css';
 
 function Products() {
+  // Search fields for blockchain products
   const [commodity, setCommodity] = useState('');
   const [stateName, setStateName] = useState('');
   const [district, setDistrict] = useState('');
   const [market, setMarket] = useState('');
-  const [vendorPrice, setVendorPrice] = useState('');
-  const [options, setOptions] = useState({ commodities: [], states: [], districts: [], markets: [] });
-  const [checkResult, setCheckResult] = useState(null);
-  const [saving, setSaving] = useState(false);
-  const [qrId, setQrId] = useState('');
-  const qrRef = useRef();
+  
+  const [product, setProduct] = useState(null);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [qrUrl, setQrUrl] = useState('');
+  const qrCanvasRef = useRef(null);
 
-  const user = useMemo(() => {
-    try {
-      const raw = localStorage.getItem('agri_user');
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
-  }, []);
-
-  useEffect(() => {
-    // Preload commodities and states lists from API
-    async function load() {
-      try {
-        const res = await fetch(`${AG_API}?api-key=${AG_KEY}&format=json&limit=1000`);
-        const data = await res.json();
-        const rows = data.records || [];
-        const commodities = Array.from(new Set(rows.map(r => (r.commodity || '').trim()))).filter(Boolean).sort();
-        const states = Array.from(new Set(rows.map(r => (r.state || '').trim()))).filter(Boolean).sort();
-        setOptions(prev => ({ ...prev, commodities, states, rows }));
-      } catch (e) {
-        // fail silently, user can retry
-      }
-    }
-    load();
-  }, []);
-
-  useEffect(() => {
-    if (!stateName || !options.rows) {
-      setOptions(prev => ({ ...prev, districts: [], markets: [] }));
-      setDistrict('');
-      setMarket('');
-      return;
-    }
-    const districts = Array.from(new Set(options.rows.filter(r => (r.state || '').trim() === stateName).map(r => (r.district || '').trim()))).filter(Boolean).sort();
-    setOptions(prev => ({ ...prev, districts, markets: [] }));
-    setDistrict('');
-    setMarket('');
-  }, [stateName, options.rows]);
-
-  useEffect(() => {
-    if (!stateName || !district || !options.rows) {
-      setOptions(prev => ({ ...prev, markets: [] }));
-      setMarket('');
-      return;
-    }
-    const markets = Array.from(new Set(options.rows.filter(r =>
-      (r.state || '').trim() === stateName && (r.district || '').trim() === district
-    ).map(r => (r.market || '').trim()))).filter(Boolean).sort();
-    setOptions(prev => ({ ...prev, markets }));
-    setMarket('');
-  }, [district, stateName, options.rows]);
-
-  async function handleCheck(e) {
+  const handleSearch = async (e) => {
     e.preventDefault();
-    setCheckResult(null);
-    setQrId('');
-    if (!commodity || !stateName || !district || !market || !vendorPrice) return;
-    try {
-      const res = await fetch(`${API_BASE}/check-price`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          commodity,
-          state: stateName,
-          district,
-          market,
-          vendor_price: Number(vendorPrice)
-        })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.message || 'Price check failed');
-      setCheckResult(data);
-      if (data.status === 'accept') {
-        setSaving(true);
-        const saveRes = await fetch(`${API_BASE}/products`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            commodity,
-            state: stateName,
-            district,
-            market,
-            vendorPrice: Number(vendorPrice),
-            marketModalPrice: data.market_modal_price,
-            status: data.status,
-            reason: data.reason,
-            submitterName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '',
-            submitterRole: user?.userType || '',
-            submitterId: user?.uniqueId || ''
-          })
-        });
-        const saved = await saveRes.json();
-        setSaving(false);
-        if (saveRes.ok) {
-          setQrId(saved.id);
-        }
-      }
-    } catch (e) {
-      setCheckResult({ status: 'error', reason: e.message });
+    setError('');
+    setProduct(null);
+    setQrUrl('');
+    
+    if (!commodity || !stateName || !district || !market) {
+      setError('Please fill all search fields');
+      return;
     }
-  }
 
-  const qrUrl = useMemo(() => (qrId ? `${window.location.origin}/product/${qrId}` : ''), [qrId]);
+    setLoading(true);
+    try {
+      // Search for product on blockchain
+      const res = await fetch(`${API_BASE}/products/match?${new URLSearchParams({
+        commodity,
+        state: stateName,
+        district,
+        market
+      })}`);
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.message || 'Product not found');
+      }
+
+      if (!data.blockchainProductId) {
+        throw new Error('Product not found on blockchain');
+      }
+
+      // Fetch full product details from blockchain
+      const productRes = await fetch(`${API_BASE}/products/product/${data.blockchainProductId}`);
+      const productData = await productRes.json();
+      
+      if (!productRes.ok) {
+        throw new Error(productData.error || 'Failed to fetch product details');
+      }
+
+      setProduct({
+        ...productData,
+        blockchainProductId: productData.blockchainProductId || data.blockchainProductId
+      });
+      // Generate QR code URL pointing to blockchain product ID
+      setQrUrl(`${window.location.origin}/product/${data.blockchainProductId}`);
+    } catch (err) {
+      setError(err.message || 'Failed to search product');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDownloadQR = () => {
+    if (!qrCanvasRef.current) return;
+    const canvas = qrCanvasRef.current;
+    const pngUrl = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.href = pngUrl;
+    link.download = `product-${product?.blockchainProductId || 'qr'}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
-    <div className="vendor-container">
-      <form onSubmit={handleCheck} className="vendor-form">
-        <h2>Products: Verify Price and Generate QR</h2>
+    <div className="products-container">
+      <form onSubmit={handleSearch} className="products-form">
+        <h2>Search Product by Details</h2>
+        <p className="form-subtitle">Enter product details to find and view QR code</p>
 
-        <label>Commodity</label>
-        <select value={commodity} onChange={e => setCommodity(e.target.value)} required>
-          <option value="">-- Select --</option>
-          {options.commodities.map(c => <option key={c} value={c}>{c}</option>)}
-        </select>
+        <label>Commodity / Crop Name</label>
+        <input
+          type="text"
+          value={commodity}
+          onChange={e => setCommodity(e.target.value)}
+          placeholder="e.g., Sweet Pumpkin"
+          required
+        />
 
         <label>State</label>
-        <select value={stateName} onChange={e => setStateName(e.target.value)} required>
-          <option value="">-- Select --</option>
-          {options.states.map(s => <option key={s} value={s}>{s}</option>)}
-        </select>
+        <input
+          type="text"
+          value={stateName}
+          onChange={e => setStateName(e.target.value)}
+          placeholder="e.g., Karnataka"
+          required
+        />
 
         <label>District</label>
-        <select value={district} onChange={e => setDistrict(e.target.value)} required disabled={!stateName}>
-          <option value="">-- Select --</option>
-          {options.districts.map(d => <option key={d} value={d}>{d}</option>)}
-        </select>
+        <input
+          type="text"
+          value={district}
+          onChange={e => setDistrict(e.target.value)}
+          placeholder="e.g., Bangalore"
+          required
+        />
 
         <label>Market</label>
-        <select value={market} onChange={e => setMarket(e.target.value)} required disabled={!district}>
-          <option value="">-- Select --</option>
-          {options.markets.map(m => <option key={m} value={m}>{m}</option>)}
-        </select>
+        <input
+          type="text"
+          value={market}
+          onChange={e => setMarket(e.target.value)}
+          placeholder="e.g., Ramanagara"
+          required
+        />
 
-        <label>Vendor Price (₹)</label>
-        <input type="number" value={vendorPrice} onChange={e => setVendorPrice(e.target.value)} required />
+        <button type="submit" disabled={loading}>
+          {loading ? 'Searching...' : 'Search Product'}
+        </button>
 
-        <button type="submit" disabled={saving}>Check & Save</button>
-
-        {checkResult && (
-          <div className="success-message" style={{ marginTop: 12 }}>
-            <strong>Status:</strong> {checkResult.status}<br />
-            {checkResult.reason && (<><strong>Reason:</strong> {checkResult.reason}<br /></>)}
-            {typeof checkResult.market_modal_price !== 'undefined' && (
-              <>
-                <strong>Market Modal:</strong> ₹{checkResult.market_modal_price}<br />
-                <strong>Vendor Price:</strong> ₹{checkResult.vendor_price}
-              </>
-            )}
-          </div>
-        )}
+        {error && <p className="error-message">❌ {error}</p>}
       </form>
 
-      {qrId && (
-        <div className="qr-section" ref={qrRef} style={{ marginTop: 16 }}>
-          <p>📦 Product QR Code:</p>
-          <QRCodeCanvas value={qrUrl} size={180} />
+      {product && (
+        <div className="product-result">
+          <h3>Product Found</h3>
+          <div className="product-info">
+            <p><strong>Product ID:</strong> {product.blockchainProductId || 'N/A'}</p>
+            <p><strong>Crop/Commodity:</strong> {product.name}</p>
+            <p><strong>Base Price:</strong> ₹{product.basePrice}</p>
+            <p><strong>State:</strong> {product.state}</p>
+            <p><strong>District:</strong> {product.district}</p>
+            <p><strong>Market:</strong> {product.market}</p>
+            {product.priceTrail && product.priceTrail.length > 0 && (
+              <p><strong>Latest Vendor Price:</strong> ₹{product.priceTrail[product.priceTrail.length - 1]}</p>
+            )}
+          </div>
+
+          {qrUrl && (
+            <div className="qr-section">
+              <p>📦 Product QR Code:</p>
+              <QRCodeCanvas value={qrUrl} size={200} ref={qrCanvasRef} />
+              <button className="qr-download-btn" onClick={handleDownloadQR}>
+                ⬇️ Download QR Code
+              </button>
+              <p className="qr-note">Scan this QR code or download it for sharing</p>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -180,5 +161,3 @@ function Products() {
 }
 
 export default Products;
-
-

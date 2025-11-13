@@ -12,12 +12,10 @@ function Farmer() {
   const qrRef = useRef();
 
   // Location fields entered manually (no dropdowns)
-  const [commodity, setCommodity] = useState('');
   const [stateName, setStateName] = useState('');
   const [district, setDistrict] = useState('');
   const [market, setMarket] = useState('');
   const [mlResult, setMlResult] = useState(null);
-  const [qrDbId, setQrDbId] = useState('');
 
   const user = useMemo(() => {
     try {
@@ -32,7 +30,6 @@ function Farmer() {
   // Ensure we mirror this to commodity for ML/DB, and to name for blockchain
   const handleCropCommodityChange = (val) => {
     setCropCommodity(val);
-    setCommodity(val);
   };
 
   const handleSubmit = async (e) => {
@@ -42,7 +39,6 @@ function Farmer() {
       setSuccessMsg('');
       setProductId(null);
       setMlResult(null);
-      setQrDbId('');
 
       // Basic client-side validation
       const cc = String(cropCommodity || '').trim();
@@ -55,7 +51,7 @@ function Farmer() {
         return;
       }
 
-      // First: ML price check using vendor price as basePrice here
+      // First: ML price check
       const checkRes = await fetch(`${API_BASE}/check-price`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -78,65 +74,53 @@ function Farmer() {
         return;
       }
 
-      // Save metadata for QR
-      const saveRes = await fetch(`${API_BASE}/products`, {
+      // Store ALL details on blockchain
+      const response = await fetch(`${API_BASE}/products/farmer/add-product`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          commodity: cc,
+          name: cc,
+          basePrice: bpNum,
           state: st,
           district: dt,
-          market: mk,
-          vendorPrice: bpNum,
-          marketModalPrice: checkData.market_modal_price,
-          status: checkData.status,
-          reason: checkData.reason,
-          submitterName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '',
-          submitterRole: user?.userType || '',
-          submitterId: user?.uniqueId || ''
-        })
-      });
-      const saved = await saveRes.json();
-      if (!saveRes.ok) {
-        setSuccessMsg(`❌ ${saved?.message || 'Failed to save product metadata.'}`);
-        return;
-      }
-      if (saveRes.ok) {
-        setQrDbId(saved.id);
-      }
-
-      // Proceed to blockchain add product - use cropCommodity as name
-      const response = await fetch('http://localhost:3000/api/products/farmer/add-product', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: cc, basePrice: bpNum }),
+          market: mk
+        }),
       });
 
       const data = await response.json();
 
-      if (response.ok) {
-        setSuccessMsg(`✅ ${data.message}`);
-        setProductId(data.productId); // <-- coming from blockchain route
-        setCropCommodity('');
-        setBasePrice('');
-        setCommodity('');
-        setStateName('');
-        setDistrict('');
-        setMarket('');
-
-        // Attach blockchainProductId to previously saved DB record (if any)
-        try {
-          if (saved?.id && data.productId) {
-            await fetch(`${API_BASE}/products/${saved.id}`, {
-              method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ blockchainProductId: String(data.productId) })
-            });
-          }
-        } catch {}
-      } else {
-        setSuccessMsg(`❌ ${data.error || 'Failed to add product.'}`);
+      if (!response.ok) {
+        setSuccessMsg(`❌ ${data.error || 'Failed to add product to blockchain.'}`);
+        return;
       }
+
+      // Store QR mapping in MongoDB (only mapping, not product data)
+      const qrCodeUrl = `${window.location.origin}/product/${data.productId}`;
+      try {
+        await fetch(`${API_BASE}/products/qr-mapping`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            blockchainProductId: data.productId,
+            txHash: data.txHash,
+            qrCodeUrl: qrCodeUrl,
+            mlVerificationStatus: checkData.status,
+            mlReason: checkData.reason,
+            marketModalPrice: checkData.market_modal_price
+          })
+        });
+      } catch (err) {
+        console.warn('QR mapping save failed (non-critical):', err);
+      }
+
+      setSuccessMsg(`✅ ${data.message}`);
+      setProductId(data.productId);
+      setCropCommodity('');
+      setBasePrice('');
+      setCommodity('');
+      setStateName('');
+      setDistrict('');
+      setMarket('');
     } catch (error) {
       console.error(error);
       setSuccessMsg('❌ Server error. Please try again.');
@@ -172,6 +156,8 @@ function Farmer() {
           type="number"
           value={basePrice}
           required
+          min={1}
+          step={1}
           onChange={(e) => setBasePrice(e.target.value)}
         />
 
@@ -212,22 +198,15 @@ function Farmer() {
 
       {productId && (
         <div className="qr-section" ref={qrRef}>
-          <p>📦 Crop QR Code (for scanning later):</p>
+          <p>📦 Crop QR Code:</p>
           <QRCodeCanvas
-            value={`http://localhost:5173/product/${productId}`}
+            value={`${window.location.origin}/product/${productId}`}
             size={180}
           />
           <br />
           <button onClick={handleDownloadQR} style={{ marginTop: '10px' }}>
             ⬇️ Download QR Code
           </button>
-        </div>
-      )}
-
-      {qrDbId && (
-        <div className="qr-section" style={{ marginTop: 16 }}>
-          <p>🧾 Product Metadata QR (DB):</p>
-          <QRCodeCanvas value={`${window.location.origin}/product/${qrDbId}`} size={180} />
         </div>
       )}
     </div>

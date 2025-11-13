@@ -1,0 +1,139 @@
+/* Products.css */
+.products-container {
+  min-height: 100vh;
+  background-color: #f1f8e9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px;
+  font-family: Arial, sans-serif;
+}
+
+.products-form {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 500px;
+  margin-bottom: 20px;
+}
+
+.products-form h2 {
+  text-align: center;
+  margin-bottom: 10px;
+  color: #2e7d32;
+}
+
+.form-subtitle {
+  text-align: center;
+  color: #666;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.products-form label {
+  display: block;
+  margin: 15px 0 5px;
+  font-weight: bold;
+  color: #2e7d32;
+}
+
+.products-form input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.products-form button {
+  margin-top: 20px;
+  width: 100%;
+  padding: 12px;
+  background-color: #43a047;
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.products-form button:hover:not(:disabled) {
+  background-color: #388e3c;
+}
+
+.products-form button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.error-message {
+  color: #d32f2f;
+  margin-top: 15px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.product-result {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 500px;
+  margin-top: 20px;
+}
+
+.product-result h3 {
+  text-align: center;
+  color: #2e7d32;
+  margin-bottom: 20px;
+}
+
+.product-info {
+  margin-bottom: 20px;
+}
+
+.product-info p {
+  margin: 10px 0;
+  color: #333;
+}
+
+.qr-section {
+  text-align: center;
+  padding: 20px;
+  background-color: #f0fff5;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+.qr-section p:first-child {
+  font-weight: bold;
+  color: #2e7d32;
+  margin-bottom: 15px;
+}
+
+.qr-note {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #666;
+}
+
+.qr-download-btn {
+  margin-top: 12px;
+  padding: 10px 16px;
+  background-color: #2e7d32;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.qr-download-btn:hover {
+  background-color: #1b5e20;
+}
+
