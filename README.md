@@ -36,22 +36,39 @@ Role-Based Supply Chain Flow ->
 - Consumer verifies product information.
 
 System Architecture : 
+
 Farmer
+
    ↓
+   
 Frontend (React)
+
    ↓
+   
 Backend (Node.js / Express)
+
    ↓
+   
 ML Verification Service (Python)
+
    ↓
+   
 Agmarknet API
+   
    ↓
+   
 Blockchain (Ethereum / Hardhat)
+   
    ↓
+   
 MongoDB
+   
    ↓
+   
 QR Code Generation
+   
    ↓
+   
 Consumer
 
 Tech Stack :
