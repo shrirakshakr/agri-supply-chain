@@ -1,4 +1,5 @@
-Overview : 
+##Overview : 
+
 This project is a blockchain-powered agricultural supply chain management system designed to improve transparency in crop pricing and reduce fraudulent price manipulation by intermediaries. The system records every price update of a product on a private Ethereum blockchain and uses machine learning to validate whether a vendor's price increase is justified based on real-time market prices obtained from the Agmarknet API. Consumers can scan a QR code attached to the product and view its complete pricing history from farmer to vendor, ensuring transparency throughout the supply chain.
 ![System Architecture](assets/Mainmain_Architecture.jpg)
 
