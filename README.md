@@ -4,6 +4,7 @@ This project is a blockchain-powered agricultural supply chain management system
 ![System Architecture](assets/Mainmain_Architecture.jpg)
 
 Problem Statement :
+
 In traditional agricultural supply chains, products pass through multiple intermediaries before reaching consumers. During this process, prices can be increased without valid justification, making it difficult for farmers and consumers to track pricing transparency.
 This project addresses this issue by:
 - Recording product transactions on an immutable blockchain.
@@ -11,19 +12,24 @@ This project addresses this issue by:
 - Providing consumers with a transparent product journey through QR codes.
 
 Features : 
+
 Blockchain-Based Traceability ->
 - Stores product and pricing information on a private Ethereum blockchain.
 - Maintains an immutable transaction history.
+
 AI-Powered Price Verification ->
 - Uses an Isolation Forest machine learning model.
 - Detects abnormal price increases.
 - Validates vendor prices against real-time market prices.
+
 Real-Time Market Integration ->
 - Fetches agricultural commodity prices from the Agmarknet API.
 - Uses market modal prices for validation.
+
 QR Code Tracking ->
 - Generates QR codes for products.
 - Allows consumers to view complete pricing history.
+
 Role-Based Supply Chain Flow ->
 - Farmer uploads crop details.
 - Vendor purchases and updates pricing.
