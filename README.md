@@ -55,23 +55,29 @@ QR Code Generation
 Consumer
 
 Tech Stack :
+
 Frontend ->
 - React.js
 - Vite
 - Bootstrap
+
 Backend ->
 - Node.js
 - Express.js
+
 Database ->
 - MongoDB
+
 Blockchain ->
 - Solidity
 - Hardhat
 - Ethers.js
+
 Machine Learning ->
 - Python
 - Scikit-Learn
 - Isolation Forest
+
 External API ->
 - Agmarknet Market Price API
 
@@ -85,6 +91,7 @@ Workflow :
 
 Machine Learning Approach :
 The project uses the Isolation Forest algorithm to identify abnormal pricing behavior.
+
 Features Used ->
 - Modal Price
 - Minimum Price
