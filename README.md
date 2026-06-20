@@ -98,6 +98,12 @@ Machine Learning ->
 External API ->
 - Agmarknet Market Price API
 
+Screenshots : 
+
+![System Architecture](assets/home_page.png)
+![System Architecture](assets/qr.png)
+![System Architecture](assets/vendor_updating_price.png)
+
 Workflow :
 1. Farmer Registration - Farmers enter crop details and initial selling price.
 2. Product Creation - Product information is stored on the blockchain.
